@@ -1,0 +1,112 @@
+/* Ensure body uses full viewport height */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f4f9;
+    margin: 0;
+    padding: 0;
+  }
+  
+  /* Navbar */
+  .navbar {
+    background-color: #343a40;
+    padding: 10px;
+  }
+  
+  .navbar a {
+    color: #fff;
+    text-decoration: none;
+    margin: 0 10px;
+  }
+  
+  .navbar a:hover {
+    color: #ffc107;
+  }
+  
+  /* Section for displaying data */
+  .container {
+    max-width: 1200px;
+    margin: 30px auto;
+    padding: 20px;
+  }
+  
+  /* For the cards or boxes that display items on /shop, /items, /categories pages */
+  .item-card, .category-card {
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    display: inline-block;
+    width: 30%;
+    box-sizing: border-box;
+    text-align: center;
+  }
+  
+  .item-card img, .category-card img {
+    width: 100%;
+    height: auto;
+    border-radius: 5px;
+  }
+  
+  /* Shop page styling for product details */
+  .item-card h3, .category-card h3 {
+    font-size: 1.2rem;
+    color: #333;
+    margin-top: 10px;
+  }
+  
+  .item-card p {
+    font-size: 1rem;
+    color: #666;
+  }
+  
+  .item-card .price {
+    font-weight: bold;
+    color: #28a745;
+  }
+  
+  .item-card .description {
+    font-size: 0.9rem;
+    color: #555;
+  }
+  
+  /* Flexbox for arranging items/cards in a row */
+  .items-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+  
+  .categories-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+  
+  /* Add some margin to the main page sections */
+  section.main {
+    margin-top: 20px;
+  }
+  
+  /* Shop, items, and categories titles */
+  h2 {
+    font-size: 2rem;
+    margin-bottom: 15px;
+    color: #333;
+  }
+  
+  /* 404 page styles */
+  .error-page {
+    text-align: center;
+    margin-top: 50px;
+    font-size: 2rem;
+    color: #dc3545;
+  }
+  
+  /* Utility class for large text */
+  .large-text {
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+  
