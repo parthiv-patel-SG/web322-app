@@ -13,11 +13,14 @@ storeService.initialize()
     .then(() => {
         console.log("Store data initialized successfully.");
 
-        // Routes
+        // Redirect the root URL to the About page
+        app.get('/', (req, res) => {
+            res.redirect('/about');
+        });
 
         // /about route - serves the about page
         app.get('/about', (req, res) => {
-            res.sendFile(path.join(__dirname, 'views', 'about.html')); // Ensure your about.html file is in the views folder
+            res.sendFile(path.join(__dirname, 'views', 'about.html')); // Ensure about.html exists in views folder
         });
 
         // /shop route - get all items
@@ -64,6 +67,5 @@ storeService.initialize()
         });
     })
     .catch((err) => {
-        // If initialization fails, log the error
         console.error("Error initializing store data:", err);
     });
