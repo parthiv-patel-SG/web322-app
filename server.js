@@ -14,10 +14,9 @@ storeService.initialize()
         console.log("Store data initialized successfully.");
 
         // Redirect the root URL to the About page
-        // Serve the about.html page as the root page
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'about.html'));
-});
+        app.get('/', (req, res) => {
+            res.redirect('/about');
+        });
 
         // /about route - serves the about page
         app.get('/about', (req, res) => {
