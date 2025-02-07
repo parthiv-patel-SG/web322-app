@@ -1,5 +1,5 @@
-const fs = require('fs'); // Import the fs (filesystem) module to read files
-const path = require('path'); // Import path module for better file path management
+const fs = require('fs'); 
+const path = require('path'); 
 
 let items = []; // Global array to hold items
 let categories = []; // Global array to hold categories
@@ -10,18 +10,18 @@ function initialize() {
         // Reading the items.json file
         fs.readFile(path.join(__dirname, 'data', 'items.json'), 'utf8', (err, data) => {
             if (err) {
-                reject("Unable to read items.json file"); // Reject if there is an error
+                reject("Unable to read items.json file"); // error message on reject
                 return;
             }
-            items = JSON.parse(data); // Parse the data and assign it to the items array
+            items = JSON.parse(data); // Parse the data to the items array
 
-            // Once items.json is read, proceed to read categories.json
+            // reads categories.json
             fs.readFile(path.join(__dirname, 'data', 'categories.json'), 'utf8', (err, data) => {
                 if (err) {
-                    reject("Unable to read categories.json file"); // Reject if there is an error
+                    reject("Unable to read categories.json file"); // error msg on rejection.
                     return;
                 }
-                categories = JSON.parse(data); // Parse the data and assign it to the categories array
+                categories = JSON.parse(data); // Parse the data to the categories array
                 resolve(); // Resolve the promise when both files are read successfully
             });
         });

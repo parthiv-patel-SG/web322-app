@@ -84,7 +84,7 @@ body {
     justify-content: space-between;
   }
   
-  /* Add some margin to the main page sections */
+  /* Adds margin to the main page */
   section.main {
     margin-top: 20px;
   }
