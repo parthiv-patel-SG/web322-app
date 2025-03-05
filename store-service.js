@@ -61,10 +61,69 @@ function getCategories() {
         }
     });
 }
+// Function to add a new item
+function addItem(itemData) {
+    return new Promise((resolve, reject) => {
+        // Set published to false if not defined
+        itemData.published = itemData.published === undefined ? false : itemData.published;
+
+        // Set id to the length of items array + 1
+        itemData.id = items.length + 1;
+
+        // Push the new item to the items array
+        items.push(itemData);
+
+        // Resolve with the newly added item
+        resolve(itemData);
+    });
+}
+
+// Function to get items by category
+function getItemsByCategory(category) {
+    return new Promise((resolve, reject) => {
+        const filteredItems = items.filter(item => item.category === parseInt(category)); // Match category by value (1,2,3,4,5)
+        
+        if (filteredItems.length > 0) {
+            resolve(filteredItems); // Return filtered items
+        } else {
+            reject("No items found for the specified category"); // Error if no items found
+        }
+    });
+}
+
+// Function to get items by minimum date
+function getItemsByMinDate(minDateStr) {
+    return new Promise((resolve, reject) => {
+        const minDate = new Date(minDateStr); // Convert string to Date object
+        const filteredItems = items.filter(item => new Date(item.postDate) >= minDate); // Filter by postDate
+        
+        if (filteredItems.length > 0) {
+            resolve(filteredItems); // Return filtered items
+        } else {
+            reject("No items found after the specified date"); // Error if no items found
+        }
+    });
+}
+
+// Function to get an item by id
+function getItemById(id) {
+    return new Promise((resolve, reject) => {
+        const item = items.find(item => item.id === parseInt(id)); // Find the item by id
+        if (item) {
+            resolve(item); // Return the item if found
+        } else {
+            reject("Item not found"); // Reject with an error if not found
+        }
+    });
+}
 
 module.exports = {
     initialize,
     getAllItems,
     getPublishedItems,
-    getCategories
+    getCategories,
+    addItem,
+    getItemsByCategory,
+    getItemsByMinDate,
+    getItemById
 };

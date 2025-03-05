@@ -9,19 +9,23 @@ Cyclic Web App URL: ____I have deplohyed on render(https://web322-app-0tmv.onren
 GitHub Repository URL: ____https://github.com/parthiv-patel-SG/web322-app__________________________________________________
 ********************************************************************************/
 
-/*
-           NOTE FOR PROFESSOR :-
-i have deployed the website on render, but it says on using the free version, my server will go on sleep on an inactivity of certain time period
-and after that it will take a little time to load the server for the first time due to inactivity. If this happens please be patient for a minute or 2.
-
-I'll also paste my replit coverpage link, its here (https://eb92fe2d-9e3f-4514-bebf-e6dd681ca1a1-00-1ze6jbaxe3kmo.worf.replit.dev/about) 
- But for it to work, my server should be online from my replit account, so if you want to see it over there, you might need to contact me 
- to ask me to go online from my account.*/ 
-
-
 const express = require("express");
 const path = require("path");
 const storeService = require("./store-service"); // Import the store-service module
+const multer = require("multer");
+const cloudinary = require('cloudinary').v2;
+const streamifier = require('streamifier');
+
+// Configure Cloudinary
+cloudinary.config({
+    cloud_name: 'YOUR_CLOUD_NAME', // Replace with your Cloudinary Cloud Name
+    api_key: 'YOUR_API_KEY',       // Replace with your Cloudinary API Key
+    api_secret: 'YOUR_API_SECRET', // Replace with your Cloudinary API Secret
+    secure: true
+});
+
+// Create the upload variable for multer (without disk storage)
+const upload = multer(); // no { storage: storage } since we are not using disk storage
 
 const app = express();
 const HTTP_PORT = process.env.PORT || 8080;
@@ -43,6 +47,66 @@ storeService
             res.sendFile(path.join(__dirname, "views", "about.html")); 
         });
 
+        // /items/add route - serves the addItem.html page
+        app.get("/items/add", (req, res) => {
+            res.sendFile(path.join(__dirname, "views", "addItem.html"));
+        });
+
+        // POST /items/add route - handles item creation and image upload
+        app.post("/items/add", upload.single("featureImage"), (req, res) => {
+            // If there is a file in the request
+            if(req.file){
+                let streamUpload = (req) => {
+                    return new Promise((resolve, reject) => {
+                        let stream = cloudinary.uploader.upload_stream(
+                            (error, result) => {
+                                if (result) {
+                                    resolve(result);
+                                } else {
+                                    reject(error);
+                                }
+                            }
+                        );
+        
+                        // Stream the file to Cloudinary
+                        streamifier.createReadStream(req.file.buffer).pipe(stream);
+                    });
+                };
+        
+                async function upload(req) {
+                    let result = await streamUpload(req);
+                    console.log(result);
+                    return result;
+                }
+        
+                // Upload the image and process the item
+                upload(req).then((uploaded) => {
+                    processItem(uploaded.url);
+                }).catch((error) => {
+                    console.error("Error uploading image:", error);
+                    processItem(""); // Fallback to empty string if upload fails
+                });
+            } else {
+                processItem(""); // No file uploaded, set empty string for image URL
+            }
+        
+            // Function to process the item after upload
+            function processItem(imageUrl) {
+                req.body.featureImage = imageUrl;
+        
+                // Use the addItem function to add the item to the store
+                storeService.addItem(req.body) // Assuming addItem is now in store-service.js
+                    .then((newItem) => {
+                        console.log("New item added:", newItem);
+                        res.redirect("/items"); // Redirect to the /items route after adding the item
+                    })
+                    .catch((err) => {
+                        res.status(500).send("Error adding item.");
+                    });
+            }
+        });
+        
+
         // Getting all the items data for shop route.
         app.get("/shop", (req, res) => {
             storeService
@@ -57,15 +121,53 @@ storeService
 
         // Getting all the published items data for items route.
         app.get("/items", (req, res) => {
-            storeService
-                .getPublishedItems()
+            const { category, minDate } = req.query;
+        
+            // Check if the category query parameter is provided
+            if (category) {
+                storeService.getItemsByCategory(category)
+                    .then((data) => {
+                        res.json(data); // Return filtered items by category
+                    })
+                    .catch((err) => {
+                        res.status(400).json({ message: err }); // Return error if no items found
+                    });
+            } 
+            // Check if the minDate query parameter is provided
+            else if (minDate) {
+                storeService.getItemsByMinDate(minDate)
+                    .then((data) => {
+                        res.json(data); // Return filtered items by minimum date
+                    })
+                    .catch((err) => {
+                        res.status(400).json({ message: err }); // Return error if no items found
+                    });
+            } 
+            // No filter, return all items
+            else {
+                storeService.getAllItems()
+                    .then((data) => {
+                        res.json(data); // Return all items
+                    })
+                    .catch((err) => {
+                        res.status(400).json({ message: err });
+                    });
+            }
+        });
+
+        app.get("/item/:id", (req, res) => {
+            const { id } = req.params; // Get the id from the URL parameters
+        
+            storeService.getItemById(id)
                 .then((data) => {
-                    res.json(data); // Send data back to the client
+                    res.json(data); // Return the item as JSON if found
                 })
                 .catch((err) => {
-                    res.json({ message: err }); // Error response 
+                    res.status(404).json({ message: err }); // Return an error if no item is found
                 });
         });
+        
+        
 
         // getting all categories for categories route
         app.get("/categories", (req, res) => {
