@@ -18,9 +18,9 @@ const streamifier = require('streamifier');
 
 // Configure Cloudinary
 cloudinary.config({
-    cloud_name: 'YOUR_CLOUD_NAME', // Replace with your Cloudinary Cloud Name
-    api_key: 'YOUR_API_KEY',       // Replace with your Cloudinary API Key
-    api_secret: 'YOUR_API_SECRET', // Replace with your Cloudinary API Secret
+    cloud_name: 'dfp2aqn56', // Replace with your Cloudinary Cloud Name
+    api_key: '226366235986687',       // Replace with your Cloudinary API Key
+    api_secret: 'h9blJFF2envzDbMiXs0QVEyNr60', // Replace with your Cloudinary API Secret
     secure: true
 });
 
