@@ -2,7 +2,7 @@
 WEB322 – Assignment 04
 I declare that this assignment is my own work in accordance with Seneca Academic Policy. No part * of this assignment has
 been copied manually or electronically from any other source (including 3rd party web sites) or distributed to other students.
-Name: ___Parthiv patel___________________
+Name: ___Parthiv Patel___________________
 Student ID: ____153136221__________
 Date: _____06th-Feb-2025___________
 Cyclic Web App URL: ____I have deplohyed on render(https://web322-app-0tmv.onrender.com)___________________________________________________
