@@ -1,5 +1,5 @@
 /*********************************************************************************
-WEB322 – Assignment 02
+WEB322 – Assignment 04
 I declare that this assignment is my own work in accordance with Seneca Academic Policy. No part * of this assignment has
 been copied manually or electronically from any other source (including 3rd party web sites) or distributed to other students.
 Name: ___Parthiv patel___________________
@@ -11,10 +11,11 @@ GitHub Repository URL: ____https://github.com/parthiv-patel-SG/web322-app_______
 
 const express = require("express");
 const path = require("path");
-const storeService = require("./store-service"); // Import the store-service module
+const itemData = require("./store-service"); // Import the store-service module
 const multer = require("multer");
 const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier');
+const { EDESTADDRREQ } = require("constants");
 
 // Configure Cloudinary
 cloudinary.config({
@@ -30,26 +31,44 @@ const upload = multer(); // no { storage: storage } since we are not using disk 
 const app = express();
 const HTTP_PORT = process.env.PORT || 8080;
 
+// Set EJS as view engine
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+
 // Serve static files from the "public" folder
 app.use(express.static(path.join(__dirname, "public")));
 
+// Add our middleware function for handling active route highlighting
+app.use(function(req, res, next) {
+    let route = req.path.substring(1);
+    app.locals.activeRoute = (route === "") ? "/" : "/" + (isNaN(route.split('/')[1]) ? route.replace(/\/(?!.*)/, "") : route.replace(/\/(.*)/, ""));
+    app.locals.viewingCategory = req.query.category;
+    next();
+});
+
 // Initialize store service before handling routes
-storeService
+itemData
     .initialize()
     .then(() => {
         console.log("Store data initialized successfully.");
 
-        // /about route - serves the about page
+        // Default route - redirect to /shop
         app.get("/", (req, res) => {
-            res.redirect("/about");
-        });
-        app.get("/about", (req, res) => {
-            res.sendFile(path.join(__dirname, "views", "about.html")); 
+            res.redirect("/shop");
         });
 
-        // /items/add route - serves the addItem.html page
+        // About page
+        app.get("/about", (req, res) => {
+            res.render("about", {
+                activeRoute: "/about"
+            });
+        });
+
+        // Add Item page
         app.get("/items/add", (req, res) => {
-            res.sendFile(path.join(__dirname, "views", "addItem.html"));
+            res.render("addItem", {
+                activeRoute: "/items/add"
+            });
         });
 
         // POST /items/add route - handles item creation and image upload
@@ -95,7 +114,7 @@ storeService
                 req.body.featureImage = imageUrl;
         
                 // Use the addItem function to add the item to the store
-                storeService.addItem(req.body) // Assuming addItem is now in store-service.js
+                itemData.addItem(req.body)
                     .then((newItem) => {
                         console.log("New item added:", newItem);
                         res.redirect("/items"); // Redirect to the /items route after adding the item
@@ -105,85 +124,167 @@ storeService
                     });
             }
         });
-        
 
-        // Getting all the items data for shop route.
+        // Shop route
         app.get("/shop", (req, res) => {
-            storeService
-                .getAllItems()
-                .then((data) => {
-                    res.json(data); // Send all items data back to the client
-                })
-                .catch((err) => {
-                    res.json({ message: err }); // Error response 
+            let viewData = {};
+            
+            try {
+                let items;
+                
+                if (req.query.category) {
+                    // Filter by category
+                    items = itemData.getPublishedItemsByCategory(req.query.category);
+                } else {
+                    // Show all items
+                    items = itemData.getPublishedItems();
+                }
+                
+                items.then(data => {
+                    viewData.posts = data;
+                    
+                    // Get categories
+                    return itemData.getCategories();
+                }).then(categoryData => {
+                    viewData.categories = categoryData;
+                    
+                    // Get the latest post
+                    if (viewData.posts.length > 0) {
+                        // Sort by date (newest first)
+                        viewData.posts.sort((a, b) => new Date(b.postDate) - new Date(a.postDate));
+                        
+                        // Set the latest post
+                        viewData.post = viewData.posts[0];
+                    }
+                    
+                    // Render the shop view
+                    res.render("shop", { 
+                        data: viewData,
+                        activeRoute: "/shop",
+                        viewingCategory: req.query.category
+                    });
+                }).catch(err => {
+                    viewData.message = "No results";
+                    res.render("shop", { 
+                        data: viewData,
+                        activeRoute: "/shop",
+                        viewingCategory: req.query.category
+                    });
                 });
-        });
-
-        // Getting all the published items data for items route.
-        app.get("/items", (req, res) => {
-            const { category, minDate } = req.query;
-        
-            // Check if the category query parameter is provided
-            if (category) {
-                storeService.getItemsByCategory(category)
-                    .then((data) => {
-                        res.json(data); // Return filtered items by category
-                    })
-                    .catch((err) => {
-                        res.status(400).json({ message: err }); // Return error if no items found
-                    });
-            } 
-            // Check if the minDate query parameter is provided
-            else if (minDate) {
-                storeService.getItemsByMinDate(minDate)
-                    .then((data) => {
-                        res.json(data); // Return filtered items by minimum date
-                    })
-                    .catch((err) => {
-                        res.status(400).json({ message: err }); // Return error if no items found
-                    });
-            } 
-            // No filter, return all items
-            else {
-                storeService.getAllItems()
-                    .then((data) => {
-                        res.json(data); // Return all items
-                    })
-                    .catch((err) => {
-                        res.status(400).json({ message: err });
-                    });
+            } catch (err) {
+                viewData.message = "No results";
+                res.render("shop", { 
+                    data: viewData,
+                    activeRoute: "/shop",
+                    viewingCategory: req.query.category
+                });
             }
         });
-
-        app.get("/item/:id", (req, res) => {
-            const { id } = req.params; // Get the id from the URL parameters
         
-            storeService.getItemById(id)
-                .then((data) => {
-                    res.json(data); // Return the item as JSON if found
+        // Shop by ID route
+        app.get("/shop/:id", (req, res) => {
+            let viewData = {};
+            
+            try {
+                // Get the requested post
+                let items = itemData.getItemById(req.params.id);
+                
+                items.then(data => {
+                    if (data) {
+                        viewData.post = data;
+                        
+                        // Get published items and categories
+                        if (req.query.category) {
+                            return itemData.getPublishedItemsByCategory(req.query.category);
+                        } else {
+                            return itemData.getPublishedItems();
+                        }
+                    } else {
+                        throw new Error('No results returned');
+                    }
+                }).then(items => {
+                    viewData.posts = items;
+                    
+                    // Get categories
+                    return itemData.getCategories();
+                }).then(categoryData => {
+                    viewData.categories = categoryData;
+                    
+                    // Render the shop view
+                    res.render("shop", { 
+                        data: viewData,
+                        activeRoute: "/shop",
+                        viewingCategory: req.query.category
+                    });
+                }).catch(err => {
+                    viewData.message = "No results";
+                    res.render("shop", { 
+                        data: viewData,
+                        activeRoute: "/shop",
+                        viewingCategory: req.query.category
+                    });
+                });
+            } catch (err) {
+                viewData.message = "No results";
+                res.render("shop", { 
+                    data: viewData,
+                    activeRoute: "/shop",
+                    viewingCategory: req.query.category
+                });
+            }
+        });
+        
+        // Items route
+        app.get("/items", (req, res) => {
+            // Apply filters if present
+            let itemPromise;
+            
+            if (req.query.category) {
+                itemPromise = itemData.getItemsByCategory(req.query.category);
+            } else if (req.query.minDate) {
+                itemPromise = itemData.getItemsByMinDate(req.query.minDate);
+            } else {
+                itemPromise = itemData.getAllItems();
+            }
+            
+            // Process the promise
+            itemPromise
+                .then(data => {
+                    res.render("items", { 
+                        items: data,
+                        activeRoute: "/items"
+                    });
                 })
-                .catch((err) => {
-                    res.status(404).json({ message: err }); // Return an error if no item is found
+                .catch(err => {
+                    res.render("items", { 
+                        message: "No results",
+                        activeRoute: "/items"
+                    });
                 });
         });
         
-        
-
-        // getting all categories for categories route
+        // Categories route
         app.get("/categories", (req, res) => {
-            storeService
-                .getCategories()
-                .then((data) => {
-                    res.json(data); // Send categories data back to the client
+            itemData.getCategories()
+                .then(data => {
+                    res.render("categories", { 
+                        categories: data,
+                        activeRoute: "/categories"
+                    });
                 })
-                .catch((err) => {
-                    res.json({ message: err }); // Error response if data retrieval fails
+                .catch(err => {
+                    res.render("categories", { 
+                        message: "No results",
+                        activeRoute: "/categories"
+                    });
                 });
         });
 
         // Handle 404 - Page Not Found for undefined routes
         app.use((req, res) => {
-            res.status(404).send("Page Not Found");
+            res.status(404).render("404", {
+                activeRoute: "/404"
+            });
         });
 
         // Start the server

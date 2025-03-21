@@ -51,6 +51,21 @@ function getPublishedItems() {
     });
 }
 
+// Add this function to store-service.js
+function getPublishedItemsByCategory(category) {
+    return new Promise((resolve, reject) => {
+        const publishedItemsByCategory = items.filter(
+            item => item.published === true && item.category === parseInt(category)
+        );
+        
+        if (publishedItemsByCategory.length > 0) {
+            resolve(publishedItemsByCategory);
+        } else {
+            reject("No results returned");
+        }
+    });
+}
+
 // Function to get all categories
 function getCategories() {
     return new Promise((resolve, reject) => {
@@ -62,6 +77,7 @@ function getCategories() {
     });
 }
 // Function to add a new item
+// Update the addItem function in store-service.js
 function addItem(itemData) {
     return new Promise((resolve, reject) => {
         // Set published to false if not defined
@@ -69,6 +85,13 @@ function addItem(itemData) {
 
         // Set id to the length of items array + 1
         itemData.id = items.length + 1;
+        
+        // Add the current date as postDate
+        const currentDate = new Date();
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth() + 1; // Month is 0-indexed
+        const day = currentDate.getDate();
+        itemData.postDate = `${year}-${month}-${day}`;
 
         // Push the new item to the items array
         items.push(itemData);
@@ -121,6 +144,7 @@ module.exports = {
     initialize,
     getAllItems,
     getPublishedItems,
+    getPublishedItemsByCategory,
     getCategories,
     addItem,
     getItemsByCategory,

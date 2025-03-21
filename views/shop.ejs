@@ -1,0 +1,51 @@
+<%- include('partials/header') %>
+
+<div class="row">
+    <section class="main col-md-9">
+        <% if (data && data.post) { %>
+            <article>
+                <h2><%= data.post.title %></h2>
+                <img src="<%= data.post.featureImage %>" alt="Feature Image" style="width:100%" />
+                <br /><br />
+                
+                <%- data.post.body %>
+                
+                <br /><br />
+                <strong>Category:</strong> <%= data.post.category %><br />
+                <strong>Price:</strong> <%= data.post.price %><br />
+                <strong>Last Updated:</strong> <%= data.post.postDate %>
+            </article>
+        <% } else { %>
+            <div class="col-md-12 text-center">
+                <h2><%= data.message %></h2>
+                <p>Please try another Post / Category</p>
+            </div>
+        <% } %>
+    </section>
+    
+    <aside class="col-md-3">
+        <% if (data && data.posts && data.posts.length > 0) { %>
+            <h4>Items</h4>
+            <ul class="list-group">
+                <% data.posts.forEach(post => { %>
+                    <li class="list-group-item">
+                        <a href="/shop/<%= post.id %>?category=<%= viewingCategory %>"><%= post.title %></a>
+                    </li>
+                <% }); %>
+            </ul>
+        <% } %>
+        
+        <% if (data && data.categories && data.categories.length > 0) { %>
+            <h4>Categories</h4>
+            <ul class="list-group">
+                <% data.categories.forEach(category => { %>
+                    <li class="list-group-item">
+                        <a href="/shop?category=<%= category.id %>"><%= category.category %></a>
+                    </li>
+                <% }); %>
+            </ul>
+        <% } %>
+    </aside>
+</div>
+
+<%- include('partials/footer') %>
