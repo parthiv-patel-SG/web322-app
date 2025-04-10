@@ -13,7 +13,7 @@
                 <br /><br />
                 <strong>Category:</strong> <%= data.post.category %><br />
                 <strong>Price:</strong> <%= data.post.price %><br />
-                <strong>Last Updated:</strong> <%= data.post.postDate %>
+                <strong>Last Updated:</strong> <%= formatDate(new Date(data.post.postDate)) %>
             </article>
         <% } else { %>
             <div class="col-md-12 text-center">
@@ -47,4 +47,3 @@
         <% } %>
     </aside>
 </div>
-

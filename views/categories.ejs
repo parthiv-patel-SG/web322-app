@@ -2,7 +2,9 @@
 
 <div class="row">
     <div class="col-md-12">
-        <h2>Categories</h2>
+        <h2>Categories
+            <a href="/categories/add" class="btn btn-success pull-right">Add Category</a>
+        </h2>
         <hr />
         
         <% if (categories && categories.length > 0) { %>
@@ -12,6 +14,7 @@
                         <tr>
                             <th>Category ID</th>
                             <th>Category Name</th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -19,6 +22,7 @@
                             <tr>
                                 <td><a href="/items?category=<%= category.id %>"><%= category.id %></a></td>
                                 <td><a href="/items?category=<%= category.id %>"><%= category.category %></a></td>
+                                <td><a href="/categories/delete/<%= category.id %>" class="btn btn-danger">remove</a></td>
                             </tr>
                         <% }); %>
                     </tbody>
@@ -26,9 +30,8 @@
             </div>
         <% } else { %>
             <div class="col-md-12 text-center">
-                <strong><%= message %></strong>
+                <strong>To add new categories you can click to add button...</strong>
             </div>
         <% } %>
     </div>
 </div>
-

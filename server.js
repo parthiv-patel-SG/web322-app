@@ -1,13 +1,16 @@
-/*********************************************************************************
-WEB322 – Assignment 04
-I declare that this assignment is my own work in accordance with Seneca Academic Policy. No part * of this assignment has
-been copied manually or electronically from any other source (including 3rd party web sites) or distributed to other students.
-Name: ___Parthiv Patel___________________
-Student ID: ____153136221__________
-Date: _____06th-Feb-2025___________
-Cyclic Web App URL: ____I have deplohyed on render(https://web322-app-0tmv.onrender.com)___________________________________________________
-GitHub Repository URL: ____https://github.com/parthiv-patel-SG/web322-app__________________________________________________
-********************************************************************************/
+/********************************************************************************* 
+ * WEB322 – Assignment 05
+ * I declare that this assignment is my own work in accordance with Seneca Academic Policy. No part 
+ * of this assignment has been copied manually or electronically from any other source (including web sites) or 
+ * distributed to other students.
+ * 
+ * Name: Parthiv Patel
+ * Student ID: 153136221
+ * Date: April 10, 2025
+ * 
+ * Cyclic Web App URL: https://web322-app-0tmv.onrender.com
+ * GitHub Repository URL: https://github.com/parthiv-patel-SG/web322-app
+ ********************************************************************************/
 
 const express = require("express");
 const path = require("path");
@@ -15,13 +18,12 @@ const itemData = require("./store-service"); // Import the store-service module
 const multer = require("multer");
 const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier');
-const { EDESTADDRREQ } = require("constants");
 
 // Configure Cloudinary
 cloudinary.config({
-    cloud_name: 'dfp2aqn56', // Replace with your Cloudinary Cloud Name
-    api_key: '226366235986687',       // Replace with your Cloudinary API Key
-    api_secret: 'h9blJFF2envzDbMiXs0QVEyNr60', // Replace with your Cloudinary API Secret
+    cloud_name: 'dfp2aqn56', 
+    api_key: '226366235986687',
+    api_secret: 'h9blJFF2envzDbMiXs0QVEyNr60',
     secure: true
 });
 
@@ -35,6 +37,9 @@ const HTTP_PORT = process.env.PORT || 8080;
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+// Add urlencoded middleware
+app.use(express.urlencoded({extended: true}));
+
 // Serve static files from the "public" folder
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -45,6 +50,14 @@ app.use(function(req, res, next) {
     app.locals.viewingCategory = req.query.category;
     next();
 });
+
+// Add the formatDate helper
+app.locals.formatDate = function(dateObj) {
+    let year = dateObj.getFullYear();
+    let month = (dateObj.getMonth() + 1).toString();
+    let day = dateObj.getDate().toString();
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+};
 
 // Initialize store service before handling routes
 itemData
@@ -59,16 +72,24 @@ itemData
 
         // About page
         app.get("/about", (req, res) => {
-            res.render("about", {
-                activeRoute: "/about"
-            });
+            res.render("about");
         });
 
         // Add Item page
         app.get("/items/add", (req, res) => {
-            res.render("addItem", {
-                activeRoute: "/items/add"
-            });
+            itemData.getCategories()
+                .then((data) => {
+                    res.render("addItem", {
+                        categories: data,
+                        activeRoute: "/items/add"
+                    });
+                })
+                .catch(() => {
+                    res.render("addItem", {
+                        categories: [],
+                        activeRoute: "/items/add"
+                    });
+                });
         });
 
         // POST /items/add route - handles item creation and image upload
@@ -115,14 +136,53 @@ itemData
         
                 // Use the addItem function to add the item to the store
                 itemData.addItem(req.body)
-                    .then((newItem) => {
-                        console.log("New item added:", newItem);
+                    .then(() => {
                         res.redirect("/items"); // Redirect to the /items route after adding the item
                     })
                     .catch((err) => {
                         res.status(500).send("Error adding item.");
                     });
             }
+        });
+
+        // Add Category Page
+        app.get("/categories/add", (req, res) => {
+            res.render("addCategory", {
+                activeRoute: "/categories"
+            });
+        });
+
+        // POST /categories/add route
+        app.post("/categories/add", (req, res) => {
+            itemData.addCategory(req.body)
+                .then(() => {
+                    res.redirect("/categories");
+                })
+                .catch((err) => {
+                    res.status(500).send("Error adding category.");
+                });
+        });
+
+        // Delete Category route
+        app.get("/categories/delete/:id", (req, res) => {
+            itemData.deleteCategoryById(req.params.id)
+                .then(() => {
+                    res.redirect("/categories");
+                })
+                .catch((err) => {
+                    res.status(500).send("Unable to Remove Category / Category not found");
+                });
+        });
+
+        // Delete Item route
+        app.get("/items/delete/:id", (req, res) => {
+            itemData.deleteItemById(req.params.id)
+                .then(() => {
+                    res.redirect("/items");
+                })
+                .catch((err) => {
+                    res.status(500).send("Unable to Remove Post / Post not found");
+                });
         });
 
         // Shop route
@@ -139,7 +199,8 @@ itemData
                     // Show all items
                     items = itemData.getPublishedItems();
                 }
-                
+
+
                 items.then(data => {
                     viewData.posts = data;
                     
@@ -250,14 +311,22 @@ itemData
             // Process the promise
             itemPromise
                 .then(data => {
-                    res.render("items", { 
-                        items: data,
-                        activeRoute: "/items"
-                    });
+                    if (data.length > 0) {
+                        res.render("items", { 
+                            items: data,
+                            activeRoute: "/items"
+                        });
+                    } else {
+                        res.render("items", {
+                            items: data, 
+                            message: "no results",
+                            activeRoute: "/items"
+                        });
+                    }
                 })
                 .catch(err => {
                     res.render("items", { 
-                        message: "No results",
+                        message: "no results",
                         activeRoute: "/items"
                     });
                 });
@@ -267,14 +336,22 @@ itemData
         app.get("/categories", (req, res) => {
             itemData.getCategories()
                 .then(data => {
-                    res.render("categories", { 
-                        categories: data,
-                        activeRoute: "/categories"
-                    });
+                    if (data.length > 0) {
+                        res.render("categories", { 
+                            categories: data,
+                            activeRoute: "/categories"
+                        });
+                    } else {
+                        res.render("categories", { 
+                            categories: data,
+                            message: "no results",
+                            activeRoute: "/categories"
+                        });
+                    }
                 })
                 .catch(err => {
                     res.render("categories", { 
-                        message: "No results",
+                        message: "no results",
                         activeRoute: "/categories"
                     });
                 });
